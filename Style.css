@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --bg-cream: #eae4da;
   --bg-cream-dark: #d8cfc2;
   --charcoal: #2b2926;
@@ -114,21 +114,21 @@ main {
 }
 
 .primary-nav a::after {
-  bottom: -6px;
-  width: 36px;
-  height: 3px;
+  bottom: -10px;
+  width: 58px;
+  height: 4px;
   border-radius: 999px;
-  background: var(--gold);
-  box-shadow: none;
+  background: linear-gradient(90deg, rgba(200,167,100,0), rgba(200,167,100,0.85), rgba(200,167,100,0));
+  box-shadow: 0 6px 18px rgba(200,167,100,0.35);
 }
 
 .primary-nav a::before {
-  bottom: -9px;
-  width: 48px;
-  height: 6px;
+  bottom: -4px;
+  width: 42px;
+  height: 20px;
   border-radius: 999px;
-  background: radial-gradient(circle at center, rgba(180, 138, 84, 0.2) 0%, rgba(180, 138, 84, 0.08) 60%, transparent 80%);
-  filter: none;
+  background: radial-gradient(circle at center, rgba(200,167,100,0.25) 0%, rgba(200,167,100,0.08) 45%, transparent 70%);
+  filter: blur(0.2px);
 }
 
 .primary-nav a:hover,
@@ -1107,11 +1107,66 @@ textarea {
   resize: vertical;
 }
 
-input[type="file"] {
-  padding: 10px;
+/* Custom file upload */
+.file-upload {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
   border: 1px dashed rgba(44,42,40,0.2);
   border-radius: var(--radius-sm);
-  background: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.7);
+}
+
+.file-upload input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.file-upload .file-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  background: var(--charcoal);
+  color: #fff;
+  border-radius: 10px;
+  font-family: 'Tajawal','Cairo',sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition);
+}
+
+.file-upload .file-btn:hover,
+.file-upload .file-btn:focus {
+  background: var(--charcoal-soft);
+  transform: translateY(-1px);
+}
+
+.file-upload .file-name {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.file-upload.has-file .file-name {
+  color: var(--charcoal);
+}
+
+.file-upload .file-preview {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
 }
 
 .field-hint {
@@ -1669,8 +1724,6 @@ input[type="file"] {
     margin-top: 24px;
   }
 }
-
-
 
 
 

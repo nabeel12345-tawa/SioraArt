@@ -259,6 +259,42 @@
                   <input type="text" id="eye-keychain-engrave" name="eye-keychain-engrave" placeholder="مثال: اسم أو تاريخ">
                   <p class="field-hint">لا يؤثر اختيار العبارة على السعر.</p>
                 </div>
+                <div class="field-group file-field" data-field-label="رفع صورة المرجع">
+                  <label class="field-label" for="eye-keychain-image">حمل صورة المرجع</label>
+                  <div class="file-upload">
+                    <input type="file" id="eye-keychain-image" name="eye-keychain-image" accept="image/*" required>
+                    <label class="file-btn" for="eye-keychain-image">اختيار صورة</label>
+                    <span class="file-name" data-placeholder="لم يتم اختيار ملف">لم يتم اختيار ملف</span>
+                    <img class="file-preview" alt="صورة مرفوعة" hidden>
+                  </div>
+                </div>
+                <div class="field-group file-field" data-field-label="رفع صورة المرجع">
+                  <label class="field-label" for="eye-envelope-image">حمل صورة المرجع</label>
+                  <div class="file-upload">
+                    <input type="file" id="eye-envelope-image" name="eye-envelope-image" accept="image/*" required>
+                    <label class="file-btn" for="eye-envelope-image">اختيار صورة</label>
+                    <span class="file-name" data-placeholder="لم يتم اختيار ملف">لم يتم اختيار ملف</span>
+                    <img class="file-preview" alt="صورة مرفوعة" hidden>
+                  </div>
+                </div>
+                <div class="field-group file-field" data-field-label="رفع صورة المرجع">
+                  <label class="field-label" for="eye-necklace-image">حمل صورة المرجع</label>
+                  <div class="file-upload">
+                    <input type="file" id="eye-necklace-image" name="eye-necklace-image" accept="image/*" required>
+                    <label class="file-btn" for="eye-necklace-image">اختيار صورة</label>
+                    <span class="file-name" data-placeholder="لم يتم اختيار ملف">لم يتم اختيار ملف</span>
+                    <img class="file-preview" alt="صورة مرفوعة" hidden>
+                  </div>
+                </div>
+                <div class="field-group file-field" data-field-label="رفع صورة المرجع">
+                  <label class="field-label" for="bookmark-image">حمل صورة المرجع</label>
+                  <div class="file-upload">
+                    <input type="file" id="bookmark-image" name="bookmark-image" accept="image/*" required>
+                    <label class="file-btn" for="bookmark-image">اختيار صورة</label>
+                    <span class="file-name" data-placeholder="لم يتم اختيار ملف">لم يتم اختيار ملف</span>
+                    <img class="file-preview" alt="صورة مرفوعة" hidden>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -366,7 +402,12 @@
                 </div>
                 <div class="field-group file-field" data-field-label="صورة المرجع">
                   <label class="field-label" for="portrait-image">حمّل صورة المرجع</label>
-                  <input type="file" id="portrait-image" name="portrait-image" accept="image/*">
+                  <div class="file-upload">
+                    <input type="file" id="portrait-image" name="portrait-image" accept="image/*" required>
+                    <label class="file-btn" for="portrait-image">اختيار صورة</label>
+                    <span class="file-name" data-placeholder="لم يتم اختيار ملف">لم يتم اختيار ملف</span>
+                    <img class="file-preview" alt="صورة مرفوعة" hidden>
+                  </div>
                   <p class="field-hint">يفضل صورة عالية الدقة لتفاصيل أدق.</p>
                 </div>
                 <div class="field-group" data-field-label="ملاحظات">
@@ -402,7 +443,12 @@
                 </div>
                 <div class="field-group" data-field-label="صورة التصميم">
                   <label class="field-label" for="phone-cover-image">حمّل صورة التصميم أو الشعارات</label>
-                  <input type="file" id="phone-cover-image" name="phone-cover-image" accept="image/*">
+                  <div class="file-upload">
+                    <input type="file" id="phone-cover-image" name="phone-cover-image" accept="image/*" required>
+                    <label class="file-btn" for="phone-cover-image">اختيار صورة</label>
+                    <span class="file-name" data-placeholder="لم يتم اختيار ملف">لم يتم اختيار ملف</span>
+                    <img class="file-preview" alt="صورة مرفوعة" hidden>
+                  </div>
                 </div>
                 <div class="field-group" data-field-label="ملاحظات">
                   <label class="field-label" for="phone-cover-notes">ملاحظات إضافية</label>
@@ -492,7 +538,7 @@
               </div>
             </div>
             <button type="submit" class="btn btn-accent" id="checkout-button">إرسال الطلب  </button>
-            <p class="privacy-hint">عند الإرسال سيتم إنشاء طلب مخصص في Shopify ويتم التواصل معك للتأكيد.</p>
+            <p class="privacy-hint">عند الإرسال سيتم إنشاء طلب مخصص في EmailJS ويتم التواصل معك للتأكيد.</p>
           </form>
           <div class="status-message" id="status-message" role="status" aria-live="polite"></div>
         </div>
@@ -549,6 +595,45 @@
           return target ? { link, section: target } : null;
         })
         .filter(Boolean);
+
+      function enhanceFileInputs(root = document) {
+        const wrappers = root.querySelectorAll('.file-upload');
+        wrappers.forEach(wrapper => {
+          const input = wrapper.querySelector('input[type="file"]');
+          const nameEl = wrapper.querySelector('.file-name');
+          const preview = wrapper.querySelector('.file-preview');
+          if (!input || !nameEl || !preview) {
+            return;
+          }
+          const placeholder = nameEl.dataset.placeholder || nameEl.textContent || '';
+          const update = () => {
+            const file = input.files && input.files[0];
+            if (file) {
+              nameEl.textContent = file.name;
+              if (file.type && file.type.startsWith('image/')) {
+                preview.src = URL.createObjectURL(file);
+                preview.hidden = false;
+              } else {
+                preview.removeAttribute('src');
+                preview.hidden = true;
+              }
+              wrapper.classList.add('has-file');
+            } else {
+              nameEl.textContent = placeholder;
+              if (preview.src) {
+                URL.revokeObjectURL(preview.src);
+              }
+              preview.removeAttribute('src');
+              preview.hidden = true;
+              wrapper.classList.remove('has-file');
+            }
+          };
+          input.addEventListener('change', update);
+          update();
+        });
+      }
+
+      enhanceFileInputs();
 
       const orderPreview = document.querySelector('.order-preview');
       const orderPreviewFigure = orderPreview?.querySelector('.order-preview-figure');
@@ -846,7 +931,9 @@
 
       setupCarousel();
 
-      const shopifyEndpoint = 'https://YOUR_SHOPIFY_STORE.myshopify.com/apps/custom-order';
+      const EMAILJS_SERVICE_ID = 'service_cdo7gbk';
+      const EMAILJS_TEMPLATE_ID = 'template_b2ou2mc';
+      const EMAILJS_PUBLIC_KEY = 'GmiYTB8_W8CmzL4ic';
 
       function resetStatus() {
         statusMessage.textContent = '';
@@ -1084,6 +1171,11 @@
         if (section) {
           options = readOptionGroups(section);
           attachments = readAttachments(section);
+          if (!attachments.length) {
+            statusMessage.textContent = 'يرجى إرفاق صورة للمنتج قبل الإضافة للسلة.';
+            statusMessage.className = 'status-message error';
+            return;
+          }
         }
 
         const pricing = calculateItemPrice(selectedProduct.value, section);
@@ -1112,7 +1204,7 @@
           section.querySelectorAll('input[type="radio"]').forEach(radio => radio.checked = false);
           section.querySelectorAll('input[type="checkbox"]').forEach(box => box.checked = false);
           section.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
-          section.querySelectorAll('input[type="file"]').forEach(fileInput => fileInput.value = '');
+          section.querySelectorAll('input[type="file"]').forEach(fileInput => { fileInput.value = ''; fileInput.dispatchEvent(new Event('change', { bubbles: true })); });
         }
         selectedProduct.checked = false;
         optionSections.forEach(sec => sec.hidden = true);
@@ -1137,6 +1229,14 @@
         }
 
         const formData = new FormData(checkoutForm);
+        try {
+          const getVal = (n) => (formData.get(n) ?? '').toString();
+          formData.append('customer_name', getVal('customer-name'));
+          formData.append('customer_phone', getVal('customer-phone'));
+          formData.append('customer_email', getVal('customer-email'));
+          formData.append('delivery_method', getVal('delivery-method'));
+          formData.append('delivery_notes', getVal('delivery-notes'));
+        } catch (_) {}
         cart.forEach((item, index) => {
           formData.append(`items[${index}][product]`, item.productName);
           formData.append(`items[${index}][price]`, item.price);
@@ -1148,17 +1248,34 @@
           });
         });
 
+        try {
+          const orderTotal = cart.reduce((sum, i) => sum + (i.price || 0), 0);
+          const summary = cart.map((i, idx) => {
+            const opts = i.options.map(o => `${o.label}: ${o.value}`).join(' | ');
+            const files = i.attachments.map(a => a.file?.name).filter(Boolean).join(', ');
+            return `${idx + 1}. ${i.productName} — ${i.price} SAR${opts ? `\n   ${opts}` : ''}${files ? `\n   Files: ${files}` : ''}`;
+          }).join('\n');
+          formData.append('order_summary', summary || '');
+          formData.append('order_total', String(orderTotal));
+          formData.append('item_count', String(cart.length));
+          formData.append('cart_json', JSON.stringify(cart));
+        } catch (_) {}
+
         statusMessage.textContent = 'جاري إرسال الطلب...';
         statusMessage.classList.add('info');
         checkoutForm.classList.add('is-loading');
 
         try {
-          if (shopifyEndpoint.includes('YOUR_SHOPIFY_STORE')) {
+          if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY || EMAILJS_PUBLIC_KEY === 'YOUR_PUBLIC_KEY') {
             await new Promise(resolve => setTimeout(resolve, 1200));
-            throw new Error('يرجى تحديث رابط Shopify قبل الإطلاق.');
+            throw new Error('يرجى تحديث رابط EmailJS قبل الإطلاق.');
           }
 
-          const response = await fetch(shopifyEndpoint, {
+          formData.append('service_id', EMAILJS_SERVICE_ID);
+          formData.append('template_id', EMAILJS_TEMPLATE_ID);
+          formData.append('user_id', EMAILJS_PUBLIC_KEY);
+
+          const response = await fetch('https://api.emailjs.com/api/v1.0/email/send-form', {
             method: 'POST',
             body: formData
           });
@@ -1186,6 +1303,7 @@
   </script>
 </body>
 </html>
+
 
 
 
