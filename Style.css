@@ -102,34 +102,25 @@ main {
   isolation: isolate;
 }
 
-.primary-nav a::before,
+
+/* Clean, minimal underline for active/hovered nav link */
 .primary-nav a::after {
   content: '';
   position: absolute;
   left: 50%;
+  bottom: -6px;
+  height: 2px;
+  width: 0;
+  background: var(--gold);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  transition: width 0.3s ease;
   pointer-events: none;
-  opacity: 0;
-  transform: translateX(-50%) scaleX(0.65);
-  transition: opacity 0.35s ease, transform 0.35s ease;
+  opacity: 1;
 }
 
-.primary-nav a::after {
-  bottom: -10px;
-  width: 58px;
-  height: 4px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, rgba(200,167,100,0), rgba(200,167,100,0.85), rgba(200,167,100,0));
-  box-shadow: 0 6px 18px rgba(200,167,100,0.35);
-}
-
-.primary-nav a::before {
-  bottom: -4px;
-  width: 42px;
-  height: 20px;
-  border-radius: 999px;
-  background: radial-gradient(circle at center, rgba(200,167,100,0.25) 0%, rgba(200,167,100,0.08) 45%, transparent 70%);
-  filter: blur(0.2px);
-}
+/* Remove previous glow pseudo-element */
+.primary-nav a::before { display: none; }
 
 .primary-nav a:hover,
 .primary-nav a:focus {
@@ -139,12 +130,8 @@ main {
 
 .primary-nav a:hover::after,
 .primary-nav a:focus::after,
-.primary-nav a:hover::before,
-.primary-nav a:focus::before,
-.primary-nav a.is-active::after,
-.primary-nav a.is-active::before {
-  opacity: 1;
-  transform: translateX(-50%) scaleX(1);
+.primary-nav a.is-active::after {
+  width: calc(100% - 24px);
 }
 
 .primary-nav a.is-active {
