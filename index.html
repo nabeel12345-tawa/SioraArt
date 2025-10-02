@@ -1277,12 +1277,8 @@
           formData.append('delivery_method', getVal('delivery-method'));
           formData.append('delivery_notes', getVal('delivery-notes'));
         } catch (_) {}
+        // Attach files only (variables below are kept compact to avoid EmailJS 50KB limit)
         cart.forEach((item, index) => {
-          formData.append(`items[${index}][product]`, item.productName);
-          formData.append(`items[${index}][price]`, item.price);
-          item.options.forEach(opt => {
-            formData.append(`items[${index}][options][${opt.label}]`, opt.value);
-          });
           item.attachments.forEach((attachment, fileIndex) => {
             formData.append(`items[${index}][files][${fileIndex}]`, attachment.file, attachment.file.name);
           });
@@ -1290,15 +1286,20 @@
 
         try {
           const orderTotal = cart.reduce((sum, i) => sum + (i.price || 0), 0);
-          const summary = cart.map((i, idx) => {
+          // Build a compact summary string and keep it under ~8KB to respect EmailJS variable limits
+          const lines = cart.map((i, idx) => {
             const opts = i.options.map(o => `${o.label}: ${o.value}`).join(' | ');
             const files = i.attachments.map(a => a.file?.name).filter(Boolean).join(', ');
-            return `${idx + 1}. ${i.productName} — ${i.price} SAR${opts ? `\n   ${opts}` : ''}${files ? `\n   Files: ${files}` : ''}`;
+            const optStr = opts ? ` | ${opts}` : '';
+            const fileStr = files ? ` | ملفات: ${files}` : '';
+            return `${idx + 1}) ${i.productName} - ${i.price} SAR${optStr}${fileStr}`;
           }).join('\n');
+          const MAX_SUMMARY = 8000; // characters
+          const summary = lines.length > MAX_SUMMARY ? (lines.slice(0, MAX_SUMMARY) + '\n... (تم تقصير الملخص)') : lines;
           formData.append('order_summary', summary || '');
           formData.append('order_total', String(orderTotal));
           formData.append('item_count', String(cart.length));
-          formData.append('cart_json', JSON.stringify(cart));
+          // Do not send cart_json to avoid hitting EmailJS variables 50KB limit
         } catch (_) {}
 
         statusMessage.textContent = 'جاري إرسال الطلب...';
