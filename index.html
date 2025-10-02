@@ -1277,10 +1277,10 @@
           formData.append('delivery_method', getVal('delivery-method'));
           formData.append('delivery_notes', getVal('delivery-notes'));
         } catch (_) {}
-        // Attach files only (variables below are kept compact to avoid EmailJS 50KB limit)
-        cart.forEach((item, index) => {
-          item.attachments.forEach((attachment, fileIndex) => {
-            formData.append(`items[${index}][files][${fileIndex}]`, attachment.file, attachment.file.name);
+        // Attach files only, using EmailJS-friendly field name "files[]"
+        cart.forEach((item) => {
+          item.attachments.forEach((attachment) => {
+            formData.append('files[]', attachment.file, attachment.file.name);
           });
         });
 
@@ -1288,11 +1288,7 @@
           const orderTotal = cart.reduce((sum, i) => sum + (i.price || 0), 0);
           // Build a compact summary string and keep it under ~8KB to respect EmailJS variable limits
           const lines = cart.map((i, idx) => {
-            const opts = i.options.map(o => `${o.label}: ${o.value}`).join(' | ');
-            const files = i.attachments.map(a => a.file?.name).filter(Boolean).join(', ');
-            const optStr = opts ? ` | ${opts}` : '';
-            const fileStr = files ? ` | ملفات: ${files}` : '';
-            return `${idx + 1}) ${i.productName} - ${i.price} SAR${optStr}${fileStr}`;
+            return `${idx + 1}) ${i.productName} - ${i.price} SAR`;
           }).join('\n');
           const MAX_SUMMARY = 8000; // characters
           const summary = lines.length > MAX_SUMMARY ? (lines.slice(0, MAX_SUMMARY) + '\n... (تم تقصير الملخص)') : lines;
@@ -1300,6 +1296,39 @@
           formData.append('order_total', String(orderTotal));
           formData.append('item_count', String(cart.length));
           // Do not send cart_json to avoid hitting EmailJS variables 50KB limit
+        } catch (_) {}
+
+        // Final guard: trim variables if still close to EmailJS 50KB limit
+        try {
+          const enc = new TextEncoder();
+          const keysToTrim = ['order_summary', 'delivery_notes'];
+          let totalBytes = 0;
+          formData.forEach((value, key) => {
+            if (value instanceof File) return;
+            totalBytes += enc.encode(String(key)).length + enc.encode(String(value)).length;
+          });
+          console.debug('[EmailJS] approx vars bytes:', totalBytes);
+          const LIMIT = 50000; // 50KB
+          if (totalBytes > LIMIT) {
+            // Iteratively trim large fields
+            keysToTrim.forEach((k) => {
+              if (totalBytes <= LIMIT) return;
+              const v = formData.get(k);
+              if (!v) return;
+              const s = String(v);
+              if (s.length > 1000) {
+                const trimmed = s.slice(0, Math.max(300, Math.floor(s.length * 0.5))) + '\n... (تم التقصير تلقائياً)';
+                formData.delete(k);
+                formData.append(k, trimmed);
+                // recompute approx size after trim
+                totalBytes = 0;
+                formData.forEach((value, key) => {
+                  if (value instanceof File) return;
+                  totalBytes += enc.encode(String(key)).length + enc.encode(String(value)).length;
+                });
+              }
+            });
+          }
         } catch (_) {}
 
         statusMessage.textContent = 'جاري إرسال الطلب...';
