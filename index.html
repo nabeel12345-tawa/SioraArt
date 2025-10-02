@@ -542,6 +542,10 @@
                 <input type="tel" id="customer-phone" name="customer-phone" required placeholder="05xxxxxxxx">
               </div>
               <div class="field-group">
+                <label class="field-label" for="customer-instagram">حساب الإنستغرام</label>
+                <input type="text" id="customer-instagram" name="customer-instagram" required placeholder="@username">
+              </div>
+              <div class="field-group">
                 <label class="field-label" for="customer-email">البريد الإلكتروني</label>
                 <input type="email" id="customer-email" name="customer-email" placeholder="example@email.com">
               </div>
@@ -1268,6 +1272,7 @@
           const getVal = (n) => (formData.get(n) ?? '').toString();
           formData.append('customer_name', getVal('customer-name'));
           formData.append('customer_phone', getVal('customer-phone'));
+          formData.append('customer_instagram', getVal('customer-instagram'));
           formData.append('customer_email', getVal('customer-email'));
           formData.append('delivery_method', getVal('delivery-method'));
           formData.append('delivery_notes', getVal('delivery-notes'));
@@ -1338,6 +1343,7 @@
   </script>
 </body>
 </html>
+
 
 
 
