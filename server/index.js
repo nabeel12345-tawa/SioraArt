@@ -3,6 +3,8 @@ import multer from 'multer';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import nodemailer from 'nodemailer';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 
@@ -130,7 +132,18 @@ app.post('/api/order', upload.any(), async (req, res) => {
 });
 
 const port = Number(process.env.PORT || 3001);
+// Serve static site from project root so frontend and API share origin
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const webRoot = path.resolve(__dirname, '..');
+app.use(express.static(webRoot));
+
+// Fallback to index.html for non-API routes
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api/')) return next();
+  res.sendFile(path.join(webRoot, 'index.html'));
+});
+
 app.listen(port, () => {
   console.log(`Order mailer listening on http://localhost:${port}`);
 });
-
