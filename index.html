@@ -1270,7 +1270,17 @@
           const summary = lines.length > MAX_SUMMARY ? (lines.slice(0, MAX_SUMMARY) + '\n... (تم تقصير الملخص)') : lines;
           formData.append('order_summary', summary || '');
           formData.append('order_total', String(orderTotal));
-          formData.append('item_count', String(cart.length));\r\n          // Per-item variables (up to 10 items)\r\n          const MAX_ITEMS = 10;\r\n          cart.slice(0, MAX_ITEMS).forEach((i, idx) => {\r\n            const optStr = i.options.map(o => ${o.label}: ).join(' | ');\r\n            const trimmedOpt = optStr.length > 220 ? (optStr.slice(0, 220) + ' ...') : optStr;\r\n            formData.append(item_product, i.productName);\r\n            formData.append(item_price, String(i.price));\r\n            formData.append(item_options, trimmedOpt);\r\n            formData.append(item_files, (itemFiles[idx] || []).join(', '));\r\n          });\r\n          
+          formData.append('item_count', String(cart.length));
+          // Per-item variables (up to 10 items)
+          const MAX_ITEMS = 10;
+          cart.slice(0, MAX_ITEMS).forEach((i, idx) => {
+            const optStr = i.options.map(o => `${o.label}: ${o.value}`).join(' | ');
+            const trimmedOpt = optStr.length > 220 ? (optStr.slice(0, 220) + ' ...') : optStr;
+            formData.append(`item${idx+1}_product`, i.productName);
+            formData.append(`item${idx+1}_price`, String(i.price));
+            formData.append(`item${idx+1}_options`, trimmedOpt);
+            formData.append(`item${idx+1}_files`, (itemFiles[idx] || []).join(', '));
+          });
           // Do not send cart_json to avoid hitting EmailJS variables 50KB limit
         } catch (_) {}
 
