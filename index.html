@@ -1268,6 +1268,7 @@
         }
 
         const formData = new FormData(checkoutForm);
+        const itemFiles = [];
         try {
           const getVal = (n) => (formData.get(n) ?? '').toString();
           formData.append('customer_name', getVal('customer-name'));
@@ -1277,10 +1278,21 @@
           formData.append('delivery_method', getVal('delivery-method'));
           formData.append('delivery_notes', getVal('delivery-notes'));
         } catch (_) {}
-        // Attach files only, using EmailJS-friendly field name "files[]"
-        cart.forEach((item) => {
-          item.attachments.forEach((attachment) => {
-            formData.append('files[]', attachment.file, attachment.file.name);
+        // Attach files only, using EmailJS-friendly field name "files[]" and include item index in filename
+        cart.forEach((item, index) => {
+          itemFiles[index] = [];
+          item.attachments.forEach((attachment, fileIndex) => {
+            const original = attachment.file;
+            const base = original?.name || `upload_${fileIndex+1}`;
+            const ext = base.lastIndexOf('.') > -1 ? base.slice(base.lastIndexOf('.')) : '';
+            const safe = (item.productName || `item${index+1}`).toString().replace(/[^A-Za-z0-9_-]+/g, '-').slice(0, 32);
+            const newName = `item${index+1}-${safe}-${fileIndex+1}${ext}`;
+            try {
+              formData.append('files[]', original, newName);
+            } catch (_) {
+              formData.append('files[]', original);
+            }
+            itemFiles[index].push(newName);
           });
         });
 
@@ -1294,7 +1306,7 @@
           const summary = lines.length > MAX_SUMMARY ? (lines.slice(0, MAX_SUMMARY) + '\n... (تم تقصير الملخص)') : lines;
           formData.append('order_summary', summary || '');
           formData.append('order_total', String(orderTotal));
-          formData.append('item_count', String(cart.length));
+          formData.append('item_count', String(cart.length));\r\n          // Per-item variables (up to 10 items)\r\n          const MAX_ITEMS = 10;\r\n          cart.slice(0, MAX_ITEMS).forEach((i, idx) => {\r\n            const optStr = i.options.map(o => ${o.label}: ).join(' | ');\r\n            const trimmedOpt = optStr.length > 220 ? (optStr.slice(0, 220) + ' ...') : optStr;\r\n            formData.append(item_product, i.productName);\r\n            formData.append(item_price, String(i.price));\r\n            formData.append(item_options, trimmedOpt);\r\n            formData.append(item_files, (itemFiles[idx] || []).join(', '));\r\n          });\r\n          
           // Do not send cart_json to avoid hitting EmailJS variables 50KB limit
         } catch (_) {}
 
@@ -1373,6 +1385,7 @@
   </script>
 </body>
 </html>
+
 
 
 
