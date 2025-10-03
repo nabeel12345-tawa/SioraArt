@@ -1242,7 +1242,7 @@
           formData.append('delivery_method', getVal('delivery-method'));
           formData.append('delivery_notes', getVal('delivery-notes'));
         } catch (_) {}
-        // Attach files only, using EmailJS-friendly field name "files[]" and include item index in filename
+        // Attach files only; use both 'my_file' and 'files[]' so EmailJS reliably treats them as attachments
         cart.forEach((item, index) => {
           itemFiles[index] = [];
           item.attachments.forEach((attachment, fileIndex) => {
@@ -1252,8 +1252,10 @@
             const safe = (item.productName || `item${index+1}`).toString().replace(/[^A-Za-z0-9_-]+/g, '-').slice(0, 32);
             const newName = `item${index+1}-${safe}-${fileIndex+1}${ext}`;
             try {
+              formData.append('my_file', original, newName);
               formData.append('files[]', original, newName);
             } catch (_) {
+              formData.append('my_file', original);
               formData.append('files[]', original);
             }
             itemFiles[index].push(newName);
