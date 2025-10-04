@@ -1,4 +1,4 @@
-export const config = {
+﻿export const config = {
   api: {
     bodyParser: false
   }
@@ -29,7 +29,7 @@ function buildItemLines(fields) {
       lines.push(`${i})`);
       continue;
     }
-    lines.push(`${i}) ${p || ''} — ${price || ''} — ${opts || ''} — Files: ${files || ''}`);
+    lines.push(`${i}) ${p || ''} â€” ${price || ''} â€” ${opts || ''} â€” Files: ${files || ''}`);
   }
   return lines.join('\n');
 }
@@ -62,8 +62,11 @@ function buildBody(fields) {
     orderSummary,
     '',
     'Totals',
-    `- Order total: ${orderTotal}`,
+    `- Order total: ${orderTotal} JD`,
     `- Item count: ${itemCount}`,
+    `- Add-ons total: ${val(fields, 'addons_total') || '0'} JD`,
+    `- Chocolate (+1 JD): ${val(fields, 'addon_chocolate') || 'No'}`,
+    `- Gift wrap (+1 JD): ${val(fields, 'addon_giftwrap') || 'No'}`,
     '',
     'Item Details',
     itemDetails
@@ -73,7 +76,7 @@ function buildBody(fields) {
 function buildSubject(fields) {
   const name = val(fields, 'customer_name') || 'Customer';
   const itemCount = val(fields, 'item_count') || '0';
-  return `New order — ${name} — Items: ${itemCount}`;
+  return `New order â€” ${name} â€” Items: ${itemCount}`;
 }
 
 function getTransport() {
@@ -144,8 +147,12 @@ export default async function handler(req, res) {
             `Notes: ${val(fields,'delivery_notes')}</p>`;
     html += `<p><strong>Quick Summary</strong><br>${String(val(fields,'order_summary') || '').replace(/\r?\n/g,'<br>')}</p>`;
     html += `<p><strong>Totals</strong><br>` +
-            `Order total: ${val(fields,'order_total')}<br>` +
-            `Item count: ${val(fields,'item_count')}</p>`;
+            `Order total: ${val(fields,'order_total')} JD<br>` +
+            `Item count: ${val(fields,'item_count')}<br>` +
+            `Add-ons total: ${val(fields,'addons_total') || '0'} JD<br>` +
+            `Chocolate (+1 JD): ${val(fields,'addon_chocolate') || 'No'}<br>` +
+            `Gift wrap (+1 JD): ${val(fields,'addon_giftwrap') || 'No'}` +
+            `</p>`;
     html += '<hr style="border:none;border-top:1px solid #ddd;margin:12px 0">';
     html += '<h3 style="margin:8px 0">Item Details</h3>';
     for (let i = 1; i <= totalItems; i++) {
@@ -154,7 +161,7 @@ export default async function handler(req, res) {
       const opts = val(fields, `item${i}_options`);
       const files = val(fields, `item${i}_files`);
       html += `<div style=\"margin:10px 0 14px\">`;
-      html += `<div style=\"font-weight:700\">${i}) ${p} — ${price}</div>`;
+      html += `<div style=\"font-weight:700\">${i}) ${p} â€” ${price}</div>`;
       if (opts) html += `<div style=\"color:#444;margin-top:2px\">${opts}</div>`;
       if (files) html += `<div style=\"color:#666;margin-top:2px\">Files: ${files}</div>`;
       const list = groups[String(i)] || [];
@@ -193,3 +200,4 @@ export default async function handler(req, res) {
     res.status(500).json({ ok: false, error: e.message || 'send failed' });
   }
 }
+
