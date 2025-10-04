@@ -1,28 +1,17 @@
-import express from 'express';
-import multer from 'multer';
-import dotenv from 'dotenv';
-import cors from 'cors';
-import nodemailer from 'nodemailer';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-dotenv.config();
-
-const app = express();
-app.use(cors());
-
-// Multer in-memory storage for attachments
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: Number(process.env.FILE_SIZE_LIMIT || 8 * 1024 * 1024) // 8MB per file default
+export const config = {
+  api: {
+    bodyParser: false
   }
-});
+};
+
+import nodemailer from 'nodemailer';
+import formidable from 'formidable';
+import fs from 'fs';
 
 function buildItemLines(fields) {
   const lines = [];
   const count = Math.min(Number(fields.item_count || 0) || 0, 50);
-  const max = Math.max(count, 10); // show at least 10 lines if placeholders exist
+  const max = Math.max(count, 10);
   for (let i = 1; i <= max; i++) {
     const p = fields[`item${i}_product`];
     const price = fields[`item${i}_price`];
@@ -91,20 +80,33 @@ function getTransport() {
   return nodemailer.createTransport({ host, port, secure, auth: { user, pass } });
 }
 
-app.post('/api/order', upload.any(), async (req, res) => {
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    res.status(405).json({ ok: false, error: 'Method Not Allowed' });
+    return;
+  }
+
+  const form = formidable({ multiples: true, keepExtensions: true });
+
   try {
-    // Convert fields to plain object of strings
-    const fields = Object.fromEntries(
-      Object.entries(req.body || {}).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v])
-    );
+    const { fields, files } = await new Promise((resolve, reject) => {
+      form.parse(req, (err, flds, fls) => (err ? reject(err) : resolve({ fields: flds, files: fls })));
+    });
 
     const toEmail = (fields.to_email || process.env.ORDER_TO_EMAIL || 'Sewarselawi133@gmail.com').toString();
-    const replyTo = (fields.customer_email || '').toString();
+    const replyTo = (fields['customer-email'] || fields.customer_email || '').toString();
 
-    const attachments = (req.files || []).map((f) => ({
-      filename: f.originalname || f.fieldname,
-      content: f.buffer,
-      contentType: f.mimetype
+    // Normalize attachments: accept my_file, files[], or any file field
+    const fileCandidates = [];
+    const pushMaybe = (v) => { if (!v) return; if (Array.isArray(v)) v.forEach(pushMaybe); else fileCandidates.push(v); };
+    pushMaybe(files['my_file']);
+    pushMaybe(files['files[]']);
+    Object.values(files || {}).forEach(pushMaybe);
+
+    const attachments = fileCandidates.filter(Boolean).map((f) => ({
+      filename: f.originalFilename || f.newFilename || (f.filepath ? f.filepath.split('/').pop() : 'attachment'),
+      content: fs.readFileSync(f.filepath),
+      contentType: f.mimetype || undefined
     }));
 
     const subject = buildSubject(fields);
@@ -124,26 +126,9 @@ app.post('/api/order', upload.any(), async (req, res) => {
       replyTo: replyTo || undefined
     });
 
-    res.json({ ok: true });
-  } catch (err) {
-    console.error('Send failed:', err);
-    res.status(500).json({ ok: false, error: err.message || 'send failed' });
+    res.status(200).json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message || 'send failed' });
   }
-});
+}
 
-const port = Number(process.env.PORT || 3001);
-// Serve static site from project root so frontend and API share origin
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const webRoot = path.resolve(__dirname, '..');
-app.use(express.static(webRoot));
-
-// Fallback to index.html for non-API routes
-app.get('*', (req, res, next) => {
-  if (req.path.startsWith('/api/')) return next();
-  res.sendFile(path.join(webRoot, 'index.html'));
-});
-
-app.listen(port, () => {
-  console.log(`Order mailer listening on http://localhost:${port}`);
-});
