@@ -8,15 +8,23 @@ import nodemailer from 'nodemailer';
 import formidable from 'formidable';
 import fs from 'fs';
 
+// Helper to read a field safely as a string (formidable can return arrays)
+function val(fields, key) {
+  const v = fields?.[key];
+  if (Array.isArray(v)) return v[0] ?? '';
+  if (v === undefined || v === null) return '';
+  return typeof v === 'string' ? v : String(v);
+}
+
 function buildItemLines(fields) {
   const lines = [];
-  const count = Math.min(Number(fields.item_count || 0) || 0, 100);
+  const count = Math.min(Number(val(fields, 'item_count') || 0) || 0, 100);
   const max = Math.max(count, 30);
   for (let i = 1; i <= max; i++) {
-    const p = fields[`item${i}_product`];
-    const price = fields[`item${i}_price`];
-    const opts = fields[`item${i}_options`];
-    const files = fields[`item${i}_files`];
+    const p = val(fields, `item${i}_product`);
+    const price = val(fields, `item${i}_price`);
+    const opts = val(fields, `item${i}_options`);
+    const files = val(fields, `item${i}_files`);
     if (!p && !price && !opts && !files) {
       lines.push(`${i})`);
       continue;
@@ -27,15 +35,15 @@ function buildItemLines(fields) {
 }
 
 function buildBody(fields) {
-  const name = fields.customer_name || '';
-  const phone = fields.customer_phone || '';
-  const instagram = fields.customer_instagram || '';
-  const email = fields.customer_email || '';
-  const method = fields.delivery_method || '';
-  const notes = fields.delivery_notes || '';
-  const orderSummary = fields.order_summary || '';
-  const orderTotal = fields.order_total || '';
-  const itemCount = fields.item_count || '';
+  const name = val(fields, 'customer_name');
+  const phone = val(fields, 'customer_phone');
+  const instagram = val(fields, 'customer_instagram');
+  const email = val(fields, 'customer_email');
+  const method = val(fields, 'delivery_method');
+  const notes = val(fields, 'delivery_notes');
+  const orderSummary = val(fields, 'order_summary');
+  const orderTotal = val(fields, 'order_total');
+  const itemCount = val(fields, 'item_count');
   const itemDetails = buildItemLines(fields);
 
   return [
@@ -63,8 +71,8 @@ function buildBody(fields) {
 }
 
 function buildSubject(fields) {
-  const name = fields.customer_name || 'Customer';
-  const itemCount = fields.item_count || '0';
+  const name = val(fields, 'customer_name') || 'Customer';
+  const itemCount = val(fields, 'item_count') || '0';
   return `New order — ${name} — Items: ${itemCount}`;
 }
 
@@ -93,8 +101,8 @@ export default async function handler(req, res) {
       form.parse(req, (err, flds, fls) => (err ? reject(err) : resolve({ fields: flds, files: fls })));
     });
 
-    const toEmail = (fields.to_email || process.env.ORDER_TO_EMAIL || 'Sewarselawi133@gmail.com').toString();
-    const replyTo = (fields['customer-email'] || fields.customer_email || '').toString();
+    const toEmail = (val(fields, 'to_email') || process.env.ORDER_TO_EMAIL || 'Sewarselawi133@gmail.com').toString();
+    const replyTo = (val(fields, 'customer-email') || val(fields, 'customer_email') || '').toString();
 
     // Normalize attachments: accept my_file, files[], or any file field
     const fileCandidates = [];
@@ -123,28 +131,28 @@ export default async function handler(req, res) {
     const subject = buildSubject(fields);
     const text = buildBody(fields);
     // Build HTML so each image appears under its item number
-    const totalItems = Math.max(30, Number(fields.item_count || 0) || 0);
+    const totalItems = Math.max(30, Number(val(fields, 'item_count') || 0) || 0);
     let html = '<div style="font-family:system-ui,Segoe UI,Arial,sans-serif;white-space:pre-wrap">';
     html += `<h2 style=\"margin:0 0 8px\">New order received</h2>`;
     html += `<p><strong>Customer</strong><br>` +
-            `Name: ${fields.customer_name || ''}<br>` +
-            `Phone: ${fields.customer_phone || ''}<br>` +
-            `Instagram: ${fields.customer_instagram || ''}<br>` +
-            `Email: ${fields.customer_email || ''}</p>`;
+            `Name: ${val(fields,'customer_name')}<br>` +
+            `Phone: ${val(fields,'customer_phone')}<br>` +
+            `Instagram: ${val(fields,'customer_instagram')}<br>` +
+            `Email: ${val(fields,'customer_email')}</p>`;
     html += `<p><strong>Delivery</strong><br>` +
-            `Method: ${fields.delivery_method || ''}<br>` +
-            `Notes: ${fields.delivery_notes || ''}</p>`;
-    html += `<p><strong>Quick Summary</strong><br>${(fields.order_summary || '').replace(/\n/g,'<br>')}</p>`;
+            `Method: ${val(fields,'delivery_method')}<br>` +
+            `Notes: ${val(fields,'delivery_notes')}</p>`;
+    html += `<p><strong>Quick Summary</strong><br>${String(val(fields,'order_summary') || '').replace(/\r?\n/g,'<br>')}</p>`;
     html += `<p><strong>Totals</strong><br>` +
-            `Order total: ${fields.order_total || ''}<br>` +
-            `Item count: ${fields.item_count || ''}</p>`;
+            `Order total: ${val(fields,'order_total')}<br>` +
+            `Item count: ${val(fields,'item_count')}</p>`;
     html += '<hr style="border:none;border-top:1px solid #ddd;margin:12px 0">';
     html += '<h3 style="margin:8px 0">Item Details</h3>';
     for (let i = 1; i <= totalItems; i++) {
-      const p = fields[`item${i}_product`] || '';
-      const price = fields[`item${i}_price`] || '';
-      const opts = fields[`item${i}_options`] || '';
-      const files = fields[`item${i}_files`] || '';
+      const p = val(fields, `item${i}_product`);
+      const price = val(fields, `item${i}_price`);
+      const opts = val(fields, `item${i}_options`);
+      const files = val(fields, `item${i}_files`);
       html += `<div style=\"margin:10px 0 14px\">`;
       html += `<div style=\"font-weight:700\">${i}) ${p} — ${price}</div>`;
       if (opts) html += `<div style=\"color:#444;margin-top:2px\">${opts}</div>`;
