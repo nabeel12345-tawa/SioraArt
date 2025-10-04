@@ -105,7 +105,7 @@
             <div class="product-body">
               <h3>سنسال فيه عين</h3>
               <p>سلسال فاخر يتدلى منه تصميم عين بالفحم مع خيارات للنقش والخامات.</p>
-              <span class="price-tag"> ٨ د.أ</span>
+              <span class="price-tag">حوالي ٢٨ د.أ</span>
             </div>
           </article>
           <article class="product-card" data-product-id="portrait" data-price="20" role="listitem">
@@ -525,20 +525,6 @@
                 <textarea id="delivery-notes" name="delivery-notes" rows="2"></textarea>
               </div>
             </div>
-              <div class="field-group" data-field-label="إضافات">
-                <label class="field-label">إضافات اختيارية</label>
-                <div class="control-row">
-                  <label class="control">
-                    <input type="checkbox" id="addon-chocolate" name="addon-chocolate" value="yes">
-                    <span>إضافة شوكولاتة (+1 JD)</span>
-                  </label>
-                  <label class="control">
-                    <input type="checkbox" id="addon-giftwrap" name="addon-giftwrap" value="yes">
-                    <span>تغليف هدية (+1 JD)</span>
-                  </label>
-                </div>
-                <p class="field-hint">كل خيار يزيد السعر ديناراً واحداً (1 JD).</p>
-              </div>
             <button type="submit" class="btn btn-accent" id="checkout-button">إرسال الطلب  </button>
           </form>
           <div class="status-message" id="status-message" role="status" aria-live="polite"></div>
@@ -608,10 +594,6 @@
           return target ? { link, section: target } : null;
         })
         .filter(Boolean);
-
-      // Recalculate total when add-on checkboxes change
-      [document.getElementById('addon-chocolate'), document.getElementById('addon-giftwrap')]
-        .forEach(el => { if (el) el.addEventListener('change', () => calculateTotal()); });
 
       function enhanceFileInputs(root = document) {
         const wrappers = root.querySelectorAll('.file-upload');
@@ -1144,7 +1126,10 @@
         }
       }
 
-      function calculateTotal() {\r\n        const base = cart.reduce((sum, item) => sum + (item.price || 0), 0);\r\n        var a1 = document.getElementById('addon-chocolate');\r\n        var a2 = document.getElementById('addon-giftwrap');\r\n        const addons = (a1 && a1.checked ? 1 : 0) + (a2 && a2.checked ? 1 : 0);\r\n        const total = base + addons;\r\n        cartTotalEl.textContent = total.toLocaleString('ar-JO') + ' ?.?';\r\n      }
+      function calculateTotal() {
+        const total = cart.reduce((sum, item) => sum + (item.price || 0), 0);
+        cartTotalEl.textContent = total.toLocaleString('ar-JO') + ' د.أ';
+      }
 
       function renderCart() {
         cartList.innerHTML = '';
@@ -1287,16 +1272,18 @@
         });
 
         try {
-          const a1 = document.getElementById('addon-chocolate')?.checked || false;\n          const a2 = document.getElementById('addon-giftwrap')?.checked || false;\n          const addonsCount = (a1?1:0) + (a2?1:0);\n          const orderTotal = cart.reduce((sum, i) => sum + (i.price || 0), 0) + addonsCount;
+          const orderTotal = cart.reduce((sum, i) => sum + (i.price || 0), 0);
           // Build a compact summary string and keep it under ~8KB to respect EmailJS variable limits
-          let lines = cart.map((i, idx) => {\n            return ${idx + 1})  -  JD;\n          }).join('\\n');\n          if (addonsCount) {\n            const addParts = []; if (a1) addParts.push('Chocolate +1 JD'); if (a2) addParts.push('Gift wrap +1 JD');\n            if (addParts.length) lines += '\\nAdd-ons: ' + addParts.join(', ');\n          }
+          const lines = cart.map((i, idx) => {
+            return `${idx + 1}) ${i.productName} - ${i.price} SAR`;
+          }).join('\n');
           const MAX_SUMMARY = 8000; // characters
           const summary = lines.length > MAX_SUMMARY ? (lines.slice(0, MAX_SUMMARY) + '\n... (تم تقصير الملخص)') : lines;
           formData.append('order_summary', summary || '');
           formData.append('order_total', String(orderTotal));
           formData.append('item_count', String(cart.length));
           // Per-item variables (up to 10 items)
-          const MAX_ITEMS = 30;\n          formData.append('addon_chocolate', a1 ? 'Yes' : 'No');\n          formData.append('addon_giftwrap', a2 ? 'Yes' : 'No');\n          formData.append('addons_total', String(addonsCount));
+          const MAX_ITEMS = 30;
           cart.slice(0, MAX_ITEMS).forEach((i, idx) => {
             const optStr = i.options.map(o => `${o.label}: ${o.value}`).join(' | ');
             const trimmedOpt = optStr.length > 220 ? (optStr.slice(0, 220) + ' ...') : optStr;
@@ -1378,9 +1365,6 @@
   </script>
 </body>
 </html>
-
-
-
 
 
 
