@@ -1105,6 +1105,12 @@ textarea {
   background: rgba(255,255,255,0.7);
 }
 
+/* Hide specific fields in eye-necklace (material and length) */
+.product-options-details[data-product="eye-necklace"] .form-block > .field-group:nth-of-type(2),
+.product-options-details[data-product="eye-necklace"] .form-block > .field-group:nth-of-type(3) {
+  display: none !important;
+}
+
 .file-upload input[type="file"] {
   position: absolute;
   width: 1px;
