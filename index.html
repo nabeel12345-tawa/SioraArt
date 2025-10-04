@@ -564,6 +564,18 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // Ensure the page opens at the very top on mobile and prevent
+      // browsers from restoring a previous scroll position.
+      try {
+        if ('scrollRestoration' in history) {
+          history.scrollRestoration = 'manual';
+        }
+      } catch (e) {}
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      window.addEventListener('load', () => {
+        // Double‑ensure after all assets/async layout shifts
+        setTimeout(() => window.scrollTo(0, 0), 0);
+      }, { once: true });
       const productRadios = document.querySelectorAll('input[name="product"]');
       const optionSections = document.querySelectorAll('.product-options-details');
       const cartList = document.getElementById('cart-items');
