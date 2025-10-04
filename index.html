@@ -1271,7 +1271,7 @@
           formData.append('order_total', String(orderTotal));
           formData.append('item_count', String(cart.length));
           // Per-item variables (up to 10 items)
-          const MAX_ITEMS = 10;
+          const MAX_ITEMS = 30;
           cart.slice(0, MAX_ITEMS).forEach((i, idx) => {
             const optStr = i.options.map(o => `${o.label}: ${o.value}`).join(' | ');
             const trimmedOpt = optStr.length > 220 ? (optStr.slice(0, 220) + ' ...') : optStr;

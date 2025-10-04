@@ -10,8 +10,8 @@ import fs from 'fs';
 
 function buildItemLines(fields) {
   const lines = [];
-  const count = Math.min(Number(fields.item_count || 0) || 0, 50);
-  const max = Math.max(count, 10);
+  const count = Math.min(Number(fields.item_count || 0) || 0, 100);
+  const max = Math.max(count, 30);
   for (let i = 1; i <= max; i++) {
     const p = fields[`item${i}_product`];
     const price = fields[`item${i}_price`];
@@ -109,8 +109,61 @@ export default async function handler(req, res) {
       contentType: f.mimetype || undefined
     }));
 
+    // Group attachments by item index from filename like: itemN-...
+    const groups = {};
+    const counters = {};
+    attachments.forEach((att) => {
+      const m = /^item(\d+)-/i.exec(att.filename || '');
+      const key = m ? m[1] : 'misc';
+      counters[key] = (counters[key] || 0) + 1;
+      att.cid = `img-${key}-${counters[key]}`; // use as inline cid in HTML
+      (groups[key] ||= []).push(att);
+    });
+
     const subject = buildSubject(fields);
     const text = buildBody(fields);
+    // Build HTML so each image appears under its item number
+    const totalItems = Math.max(30, Number(fields.item_count || 0) || 0);
+    let html = '<div style="font-family:system-ui,Segoe UI,Arial,sans-serif;white-space:pre-wrap">';
+    html += `<h2 style=\"margin:0 0 8px\">New order received</h2>`;
+    html += `<p><strong>Customer</strong><br>` +
+            `Name: ${fields.customer_name || ''}<br>` +
+            `Phone: ${fields.customer_phone || ''}<br>` +
+            `Instagram: ${fields.customer_instagram || ''}<br>` +
+            `Email: ${fields.customer_email || ''}</p>`;
+    html += `<p><strong>Delivery</strong><br>` +
+            `Method: ${fields.delivery_method || ''}<br>` +
+            `Notes: ${fields.delivery_notes || ''}</p>`;
+    html += `<p><strong>Quick Summary</strong><br>${(fields.order_summary || '').replace(/\n/g,'<br>')}</p>`;
+    html += `<p><strong>Totals</strong><br>` +
+            `Order total: ${fields.order_total || ''}<br>` +
+            `Item count: ${fields.item_count || ''}</p>`;
+    html += '<hr style="border:none;border-top:1px solid #ddd;margin:12px 0">';
+    html += '<h3 style="margin:8px 0">Item Details</h3>';
+    for (let i = 1; i <= totalItems; i++) {
+      const p = fields[`item${i}_product`] || '';
+      const price = fields[`item${i}_price`] || '';
+      const opts = fields[`item${i}_options`] || '';
+      const files = fields[`item${i}_files`] || '';
+      html += `<div style=\"margin:10px 0 14px\">`;
+      html += `<div style=\"font-weight:700\">${i}) ${p} — ${price}</div>`;
+      if (opts) html += `<div style=\"color:#444;margin-top:2px\">${opts}</div>`;
+      if (files) html += `<div style=\"color:#666;margin-top:2px\">Files: ${files}</div>`;
+      const list = groups[String(i)] || [];
+      list.forEach((att) => {
+        html += `<div style=\"margin:8px 0 2px;font-weight:600\">Image for item ${i}</div>`;
+        html += `<img src=\"cid:${att.cid}\" alt=\"item ${i}\" style=\"max-width:520px;border:1px solid #eee;border-radius:8px;display:block\">`;
+      });
+      html += `</div>`;
+    }
+    if (groups['misc']?.length) {
+      html += '<h3>Other Files</h3>';
+      groups['misc'].forEach((att) => {
+        html += `<div style=\"margin:8px 0 2px;font-weight:600\">File</div>`;
+        html += `<img src=\"cid:${att.cid}\" alt=\"file\" style=\"max-width:520px;border:1px solid #eee;border-radius:8px;display:block\">`;
+      });
+    }
+    html += '</div>';
 
     const transporter = getTransport();
     const fromName = process.env.MAIL_FROM_NAME || 'Siora Art';
@@ -122,6 +175,7 @@ export default async function handler(req, res) {
       to: toEmail,
       subject,
       text,
+      html,
       attachments,
       replyTo: replyTo || undefined
     });
@@ -131,4 +185,3 @@ export default async function handler(req, res) {
     res.status(500).json({ ok: false, error: e.message || 'send failed' });
   }
 }
-
