@@ -40,9 +40,12 @@ function buildBody(fields) {
   const instagram = val(fields, 'customer_instagram');
   const email = val(fields, 'customer_email');
   const method = val(fields, 'delivery_method');
+  const location = val(fields, 'delivery_location');
   const notes = val(fields, 'delivery_notes');
   const orderSummary = val(fields, 'order_summary');
   const orderTotal = val(fields, 'order_total');
+  const deliveryFee = val(fields, 'delivery_fee') || '0';
+  const orderFinal = val(fields, 'order_total_final') || '';
   const itemCount = val(fields, 'item_count');
   const itemDetails = buildItemLines(fields);
 
@@ -56,17 +59,20 @@ function buildBody(fields) {
     '',
     'Delivery',
     `- Method: ${method}`,
+    `- Location: ${location}`,
     `- Notes: ${notes}`,
     '',
     'Quick Summary',
     orderSummary,
     '',
     'Totals',
-    `- Order total: ${orderTotal} JD`,
+    `- Base total: ${orderTotal} JD`,
+    `- Delivery fee: ${deliveryFee} JD`,
     `- Item count: ${itemCount}`,
     `- Add-ons total: ${val(fields, 'addons_total') || '0'} JD`,
     `- Chocolate (+1 JD): ${val(fields, 'addon_chocolate') || 'No'}`,
     `- Gift wrap (+1 JD): ${val(fields, 'addon_giftwrap') || 'No'}`,
+    `- Final total: ${orderFinal || (Number(orderTotal||0)+Number(deliveryFee||0)+Number(val(fields,'addons_total')||0))} JD`,
     '',
     'Item Details',
     itemDetails
@@ -89,6 +95,13 @@ function getTransport() {
     throw new Error('SMTP_USER/SMTP_PASS are not set');
   }
   return nodemailer.createTransport({ host, port, secure, auth: { user, pass } });
+}
+
+// Clean subject builder to avoid mojibake
+function buildSubjectClean(fields) {
+  const name = val(fields, 'customer_name') || 'Customer';
+  const itemCount = val(fields, 'item_count') || '0';
+  return `New order - ${name} - Items: ${itemCount}`;
 }
 
 export default async function handler(req, res) {
@@ -131,7 +144,7 @@ export default async function handler(req, res) {
       (groups[key] ||= []).push(att);
     });
 
-    const subject = buildSubject(fields);
+    const subject = buildSubjectClean(fields);
     const text = buildBody(fields);
     // Build HTML so each image appears under its item number
     const totalItems = Math.max(30, Number(val(fields, 'item_count') || 0) || 0);
@@ -144,14 +157,17 @@ export default async function handler(req, res) {
             `Email: ${val(fields,'customer_email')}</p>`;
     html += `<p><strong>Delivery</strong><br>` +
             `Method: ${val(fields,'delivery_method')}<br>` +
+            `Location: ${val(fields,'delivery_location')}<br>` +
             `Notes: ${val(fields,'delivery_notes')}</p>`;
     html += `<p><strong>Quick Summary</strong><br>${String(val(fields,'order_summary') || '').replace(/\r?\n/g,'<br>')}</p>`;
     html += `<p><strong>Totals</strong><br>` +
-            `Order total: ${val(fields,'order_total')} JD<br>` +
-            `Item count: ${val(fields,'item_count')}<br>` +
+            `Base total: ${val(fields,'order_total')} JD<br>` +
+            `Delivery fee: ${val(fields,'delivery_fee') || '0'} JD<br>` +
             `Add-ons total: ${val(fields,'addons_total') || '0'} JD<br>` +
             `Chocolate (+1 JD): ${val(fields,'addon_chocolate') || 'No'}<br>` +
-            `Gift wrap (+1 JD): ${val(fields,'addon_giftwrap') || 'No'}` +
+            `Gift wrap (+1 JD): ${val(fields,'addon_giftwrap') || 'No'}<br>` +
+            `Final total: ${val(fields,'order_total_final') || ''} JD<br>` +
+            `Item count: ${val(fields,'item_count')}` +
             `</p>`;
     html += '<hr style="border:none;border-top:1px solid #ddd;margin:12px 0">';
     html += '<h3 style="margin:8px 0">Item Details</h3>';
@@ -200,4 +216,3 @@ export default async function handler(req, res) {
     res.status(500).json({ ok: false, error: e.message || 'send failed' });
   }
 }
-

@@ -1027,6 +1027,29 @@ legend {
   margin-bottom: 18px;
 }
 
+/* Delivery location reveal styling */
+#delivery-location-group {
+  padding: 12px 14px;
+  border: 1px solid rgba(184,155,99,0.28);
+  background: rgba(255,255,255,0.9);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 22px rgba(32,27,22,0.08);
+}
+
+#delivery-location-group.is-visible {
+  animation: slideFadeIn 0.28s ease both;
+}
+
+@keyframes slideFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+#delivery-location-group:focus-within {
+  border-color: rgba(184,155,99,0.5);
+  box-shadow: 0 12px 24px rgba(32,27,22,0.12), 0 0 0 3px rgba(184,155,99,0.12);
+}
+
 .field-label {
   font-weight: 600;
   color: var(--charcoal);
@@ -1288,6 +1311,110 @@ textarea {
   margin-bottom: 24px;
 }
 
+/* Invoice-like breakdown near submit button */
+.checkout-invoice {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: rgba(255,255,255,0.95);
+  padding: 14px 16px;
+  margin: 10px 0 16px;
+}
+.invoice-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.invoice-total { font-weight: 800; font-size: 1.15rem; color: var(--charcoal); }
+.invoice-note { color: var(--text-muted); font-size: .85rem; }
+.invoice-rows { display: grid; gap: 6px; }
+.invoice-row { display:flex; justify-content: space-between; align-items:center; padding: 6px 0; border-top: 1px dashed rgba(44,42,40,0.15); }
+.invoice-row:first-child { border-top: 0; }
+.invoice-sub { color: var(--text-muted); font-size: .88rem; padding-inline: 6px; }
+.invoice-line { display:flex; justify-content: space-between; gap: 12px; }
+.invoice-line .amount { color: var(--charcoal); font-weight: 600; }
+
+/* Inline breakdown near total */
+.total-breakdown {
+  margin-top: 8px;
+  display: grid;
+  gap: 4px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+.total-breakdown .row { display:flex; justify-content: space-between; }
+
+/* Delivery location smooth reveal */
+#delivery-location-group {
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+#delivery-location-group:not(.is-open) {
+  display: none;
+}
+#delivery-location-group.animate-in {
+  animation: fadeSlideIn 0.25s ease both;
+}
+
+/* Hide duplicate bottom add-ons group if present */
+.field-group:has(#addon-chocolate),
+.field-group:has(#addon-giftwrap) {
+  display: none !important;
+}
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Place total and add-on options together in checkout */
+.checkout-summary {
+  display: grid;
+  gap: 12px 16px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: rgba(255,255,255,0.9);
+  margin-bottom: 16px;
+}
+
+@media (min-width: 700px) {
+  .checkout-summary {
+    grid-template-columns: 1fr auto;
+  }
+}
+
+.checkout-summary .cart-summary {
+  margin: 0; /* remove extra gap when grouped */
+}
+
+.field-group--addons {
+  margin: 0; /* tighter to total */
+}
+
+.field-group--addons .control-row {
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.checkout-summary .cart-total span {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.checkout-summary .cart-total strong {
+  font-size: 1.2rem;
+  color: var(--charcoal);
+}
+
+.checkout-summary .total-hint {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.field-group--addons > .field-label {
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+}
+
 .cart-total {
   display: flex;
   justify-content: space-between;
@@ -1377,13 +1504,24 @@ textarea {
 .contact-list span {
   color: var(--gold);
   font-weight: 600;
-  margin-left: 6px;
+  margin-inline-end: 6px; /* RTL/LTR friendly spacing */
+}
+
+/* Force LTR display for WhatsApp numbers regardless of page RTL */
+.contact-list a[href*="wa.me"],
+.contact-list .ltr-number {
+  direction: ltr;
+  unicode-bidi: bidi-override;
+  display: inline-block;
+  text-align: left;
 }
 
 .contact-note {
   margin-top: 12px;
   color: var(--text-muted);
 }
+
+/* Keep Contact section heading centered (default from .section-heading) */
 
 .site-footer {
   text-align: center;
@@ -1647,6 +1785,8 @@ textarea {
   place-items: center;
   font-size: 1.3rem;
   pointer-events: auto;
+  z-index: 50; /* Ensure arrows sit above cards */
+  cursor: pointer;
   transition: transform var(--transition), box-shadow var(--transition), border var(--transition);
 }
 

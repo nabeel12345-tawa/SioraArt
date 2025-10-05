@@ -488,12 +488,26 @@
             <span class="order-highlight">تحديث السعر لحظيًا</span>
           </div>
           <ul class="cart-list" id="cart-items"></ul>
-          <div class="cart-summary">
+          <div class="checkout-summary"><div class="cart-summary">
             <div class="cart-total">
               <span>الإجمالي التقريبي</span>
               <strong id="cart-total">0 د.أ</strong>
             </div>
             <p class="total-hint">قد يتغير السعر النهائي بعد مراجعة الفنانة للتفاصيل.</p>
+          </div>
+          <div class="field-group field-group--addons" data-field-label="إضافات">
+            <label class="field-label">إضافات اختيارية</label>
+            <div class="control-row">
+              <label class="control">
+                <input type="checkbox" id="addon-chocolate-top" name="addon-chocolate" value="yes">
+                <span>إضافة شوكولاتة (+1 JD)</span>
+              </label>
+              <label class="control">
+                <input type="checkbox" id="addon-giftwrap-top" name="addon-giftwrap" value="yes">
+                <span>تغليف هدية (+1 JD)</span>
+              </label>
+            </div>
+          </div>
           </div>
           <form id="checkout-form" novalidate>
             <div class="form-block">
@@ -516,14 +530,22 @@
               <div class="field-group">
                 <label class="field-label" for="delivery-method">طريقة الاستلام</label>
                 <select id="delivery-method" name="delivery-method">
-                  <option value="توصيل">توصيل</option>
+                  <option value="توصيل"> توصيل - (+2 JD)</option>
                   <option value="استلام من الورشة">استلام من الورشة</option>
                 </select>
+                <div class="field-group" id="delivery-location-group" hidden>
+                  <label class="field-label" for="delivery-location">الموقع (المدينة - المنطقة)</label>
+                  <input type="text" id="delivery-location" name="delivery-location" placeholder="عمان - جبيهة">
+                </div>
               </div>
               <div class="field-group">
                 <label class="field-label" for="delivery-notes">ملاحظات للتسليم (اختياري)</label>
-                <textarea id="delivery-notes" name="delivery-notes" rows="2"></textarea>
-              </div>
+                 <textarea id="delivery-notes" name="delivery-notes" rows="2"></textarea>
+               </div>
+               <div class="field-group" id="delivery-location-group" hidden>
+                 <label class="field-label" for="delivery-location">الموقع (المدينة - المنطقة)</label>
+                 <input type="text" id="delivery-location" name="delivery-location" placeholder="عمان - جبيهة">
+               </div>
             </div>
 			  <div class="field-group" data-field-label="إضافات">
 				<label class="field-label">إضافات اختيارية</label>
@@ -555,9 +577,9 @@
         <div>
           <h3>وسائل التواصل</h3>
           <ul class="contact-list">
-            <li><span>واتساب:</span> <a href="https://wa.me/+962792793803" target="_blank" rel="noopener">+966 50 000 0000</a></li>
-            <li><span>انستاجرام:</span> <a href="https://www.instagram.com/sewar_raed31" target="_blank" rel="noopener">@sewar_raed31</a></li>
-            <li><span>البريد:</span> <a href="mailto:Sewarselawi133@gmail.com">Sewarselawi133@gmail.con</a></li>
+            <li><span>واتساب:</span> <a href="https://wa.me/+962792793803" target="_blank" rel="noopener">+962 7 9279 3803</a></li>
+            <li><span>انستاجرام:</span> <a href="https://www.instagram.com/sewar_raed31" target="_blank" rel="noopener">sewar_raed31@</a></li>
+            <li><span>البريد:</span> <a href="mailto:Sewarselawi133@gmail.com">Sewarselawi133@gmail.com</a></li>
           </ul>
         </div>
         <div>
@@ -609,9 +631,92 @@
         })
         .filter(Boolean);
 
-      // Recalculate total when add-on checkboxes change
-      [document.getElementById('addon-chocolate'), document.getElementById('addon-giftwrap')]
-        .forEach(el => { if (el) el.addEventListener('change', () => calculateTotal()); });
+      // Toggle delivery location input based on delivery method
+      const deliveryMethodSelect = document.getElementById('delivery-method');
+      // Default to pickup on first load; user can switch to delivery
+      try { if (deliveryMethodSelect) deliveryMethodSelect.selectedIndex = 1; } catch (_) {}
+      const deliveryLocationGroup = document.getElementById('delivery-location-group');
+      const deliveryLocationInput = document.getElementById('delivery-location');
+      // Ensure only one location group exists (keep the first/top one)
+      try {
+        const dupes = document.querySelectorAll('#delivery-location-group');
+        if (dupes.length > 1) {
+          for (let i = 1; i < dupes.length; i++) {
+            dupes[i].remove();
+          }
+        }
+        // Ensure initial state is hidden regardless of HTML attribute parsing
+        document.querySelectorAll('#delivery-location-group').forEach(g => {
+          g.hidden = true;
+          g.style.display = 'none';
+        });
+      } catch (_) {}
+      const updateDeliveryLocationVisibility = () => {
+        if (!deliveryMethodSelect || !deliveryLocationGroup || !deliveryLocationInput) return;
+        const opt = deliveryMethodSelect.options[deliveryMethodSelect.selectedIndex];
+        const label = (opt && (opt.textContent || opt.value) || '').trim();
+        const isDelivery = /توصيل/.test(label) || /توصيل/.test(deliveryMethodSelect.value || '');
+        deliveryLocationGroup.hidden = !isDelivery;
+        deliveryLocationInput.required = isDelivery;
+        if (!isDelivery) {
+          deliveryLocationInput.value = '';
+        }
+        // Re-evaluate using Arabic keywords to avoid mojibake issues in some environments
+        try {
+          const combined = String(deliveryMethodSelect.value || '') + ' ' + label;
+          const mustShow = /توصيل/.test(combined) && !/استلام/.test(combined);
+          deliveryLocationGroup.hidden = !mustShow;
+          deliveryLocationInput.required = mustShow;
+          if (!mustShow) { deliveryLocationInput.value = ''; }
+        } catch (_) {}
+      };
+      if (deliveryMethodSelect) {
+        const enforceDeliveryLocation = () => {
+          try {
+            const opt = deliveryMethodSelect.options[deliveryMethodSelect.selectedIndex];
+            const txt = (opt && (opt.textContent || opt.value) || '').trim();
+            const isDelivery = /توصيل/.test(txt) && !/استلام/.test(txt);
+            // Apply to all possible duplicated groups defensively
+            document.querySelectorAll('#delivery-location-group').forEach((grp) => {
+              grp.hidden = !isDelivery;
+              grp.style.display = isDelivery ? '' : 'none';
+              grp.classList.toggle('is-open', isDelivery);
+            });
+            if (deliveryLocationInput) {
+              deliveryLocationInput.required = isDelivery;
+              if (!isDelivery) deliveryLocationInput.value = '';
+            }
+          } catch (_) {}
+        };
+        deliveryMethodSelect.addEventListener('change', () => {
+          enforceDeliveryLocation();
+          const grp = document.querySelector('#delivery-location-group');
+          if (grp && !grp.hidden) {
+            grp.classList.add('animate-in');
+            setTimeout(() => grp.classList.remove('animate-in'), 300);
+          }
+          calculateTotal();
+        });
+        enforceDeliveryLocation();
+      }
+
+      // Recalculate total when add-on checkboxes change (support also top-positioned controls)
+      [
+        document.getElementById('addon-chocolate-top'),
+        document.getElementById('addon-giftwrap-top'),
+        document.getElementById('addon-chocolate'),
+        document.getElementById('addon-giftwrap')
+      ].forEach(el => { if (el) el.addEventListener('change', () => calculateTotal()); });
+      if (deliveryMethodSelect) {
+        deliveryMethodSelect.addEventListener('change', () => calculateTotal());
+      }
+
+      // If top-positioned add-ons exist, hide the original group in the form
+      const originalAddonGroup = (document.getElementById('addon-chocolate') || document.getElementById('addon-giftwrap'))?.closest('.field-group');
+      const topAddonExists = document.getElementById('addon-chocolate-top') || document.getElementById('addon-giftwrap-top');
+      if (originalAddonGroup && topAddonExists) {
+        originalAddonGroup.hidden = true;
+      }
 
       function enhanceFileInputs(root = document) {
         const wrappers = root.querySelectorAll('.file-upload');
@@ -1145,13 +1250,27 @@
       }
 
       function calculateTotal() {
-        const base = cart.reduce((sum, item) => sum + (item.price || 0), 0);
-        const ch = document.getElementById("addon-chocolate");
-        const gw = document.getElementById("addon-giftwrap");
-        const addons = (ch && ch.checked ? 1 : 0) + (gw && gw.checked ? 1 : 0);
-        const total = base + addons;
-        cartTotalEl.textContent = total.toLocaleString("ar-JO") + " ?.؟";
-      }
+  const base = cart.reduce((sum, item) => sum + (item.price || 0), 0);
+  const chTop = document.getElementById('addon-chocolate-top');
+  const gwTop = document.getElementById('addon-giftwrap-top');
+  const ch = chTop || document.getElementById('addon-chocolate');
+  const gw = gwTop || document.getElementById('addon-giftwrap');
+  const addons = (ch && ch.checked ? 1 : 0) + (gw && gw.checked ? 1 : 0);
+  const isDelivery = !!(document.getElementById('delivery-location-group') && !document.getElementById('delivery-location-group').hidden);
+  const deliveryFee = isDelivery ? 2 : 0;
+  const total = base + addons + deliveryFee;
+  if (cartTotalEl) cartTotalEl.textContent = total.toLocaleString('ar-JO') + ' د.أ';
+  const baseEl = document.getElementById('base-total');
+  const addonsRow = document.getElementById('addons-row');
+  const addonsEl = document.getElementById('addons-total');
+  const deliveryRow = document.getElementById('delivery-fee-row');
+  const deliveryEl = document.getElementById('delivery-fee');
+  if (baseEl) baseEl.textContent = base.toLocaleString('ar-JO') + ' د.أ';
+  if (addonsEl) addonsEl.textContent = '+' + addons.toLocaleString('ar-JO') + ' د.أ';
+  if (addonsRow) addonsRow.setAttribute('aria-hidden', String(addons === 0));
+  if (deliveryEl) deliveryEl.textContent = '+' + deliveryFee.toLocaleString('ar-JO') + ' د.أ';
+  if (deliveryRow) deliveryRow.setAttribute('aria-hidden', String(deliveryFee === 0));
+}
 
       function renderCart() {
         cartList.innerHTML = '';
@@ -1271,6 +1390,7 @@
           formData.append('customer_instagram', getVal('customer-instagram'));
           formData.append('customer_email', getVal('customer-email'));
           formData.append('delivery_method', getVal('delivery-method'));
+          formData.append('delivery_location', getVal('delivery-location'));
           formData.append('delivery_notes', getVal('delivery-notes'));
         } catch (_) {}
         // Attach files only; use both 'my_file' and 'files[]' so EmailJS reliably treats them as attachments
@@ -1297,16 +1417,26 @@
           const orderTotal = cart.reduce((sum, i) => sum + (i.price || 0), 0);
           // Build a compact summary string and keep it under ~8KB to respect EmailJS variable limits
           const lines = cart.map((i, idx) => {
-            return `${idx + 1}) ${i.productName} - ${i.price} SAR`;
+            return `${idx + 1}) ${i.productName} - ${i.price} JD`;
           }).join('\n');
           const MAX_SUMMARY = 8000; // characters
           const summary = lines.length > MAX_SUMMARY ? (lines.slice(0, MAX_SUMMARY) + '\n... (تم تقصير الملخص)') : lines;
           formData.append('order_summary', summary || '');
           formData.append('order_total', String(orderTotal));
           formData.append('item_count', String(cart.length));
-          formData.append('addon_chocolate', (document.getElementById('addon-chocolate') && document.getElementById('addon-chocolate').checked) ? 'Yes' : 'No');
-          formData.append('addon_giftwrap', (document.getElementById('addon-giftwrap') && document.getElementById('addon-giftwrap').checked) ? 'Yes' : 'No');
-          formData.append('addons_total', String((document.getElementById('addon-chocolate') && document.getElementById('addon-chocolate').checked ? 1 : 0) + (document.getElementById('addon-giftwrap') && document.getElementById('addon-giftwrap').checked ? 1 : 0)));
+          const chTop = document.getElementById('addon-chocolate-top');
+          const gwTop = document.getElementById('addon-giftwrap-top');
+          const ch = chTop || document.getElementById('addon-chocolate');
+          const gw = gwTop || document.getElementById('addon-giftwrap');
+          const chChecked = !!(ch && ch.checked);
+          const gwChecked = !!(gw && gw.checked);
+          const addonsTotal = (chChecked ? 1 : 0) + (gwChecked ? 1 : 0);
+          formData.append('addon_chocolate', chChecked ? 'Yes' : 'No');
+          formData.append('addon_giftwrap', gwChecked ? 'Yes' : 'No');
+          formData.append('addons_total', String(addonsTotal));
+          const deliveryFee = (document.getElementById('delivery-location-group') && !document.getElementById('delivery-location-group').hidden) ? 2 : 0;
+          formData.append('delivery_fee', String(deliveryFee));
+          formData.append('order_total_final', String(orderTotal + addonsTotal + deliveryFee));
           // Per-item variables (up to 10 items)
           const MAX_ITEMS = 30;
           cart.slice(0, MAX_ITEMS).forEach((i, idx) => {
@@ -1385,11 +1515,30 @@
         }
       });
 
+      // Strong enforcement: show location only if first option (Delivery) is selected
+      const enforceDeliveryVisibility = () => {
+        if (!deliveryMethodSelect || !deliveryLocationGroup || !deliveryLocationInput) return;
+        const isDeliveryByIndex = (deliveryMethodSelect.selectedIndex === 0);
+        deliveryLocationGroup.hidden = !isDeliveryByIndex;
+        deliveryLocationInput.required = isDeliveryByIndex;
+        if (!isDeliveryByIndex) {
+          deliveryLocationInput.value = '';
+        }
+      };
+      if (deliveryMethodSelect) {
+        deliveryMethodSelect.addEventListener('change', enforceDeliveryVisibility);
+        enforceDeliveryVisibility();
+      }
+
       renderCart();
     });
   </script>
 </body>
 </html>
+
+
+
+
 
 
 

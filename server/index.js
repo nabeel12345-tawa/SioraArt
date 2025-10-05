@@ -37,17 +37,41 @@ function buildItemLines(fields) {
   return lines.join('\n');
 }
 
+function buildItemLinesClean(fields) {
+  const lines = [];
+  const count = Math.min(Number(fields.item_count || 0) || 0, 50);
+  const max = Math.max(count, 10);
+  for (let i = 1; i <= max; i++) {
+    const p = fields[`item${i}_product`];
+    const price = fields[`item${i}_price`];
+    const opts = fields[`item${i}_options`];
+    const files = fields[`item${i}_files`];
+    if (!p && !price && !opts && !files) {
+      lines.push(`${i})`);
+      continue;
+    }
+    lines.push(`${i}) ${p || ''} - ${price || ''} - ${opts || ''} - Files: ${files || ''}`);
+  }
+  return lines.join('\n');
+}
+
 function buildBody(fields) {
   const name = fields.customer_name || '';
   const phone = fields.customer_phone || '';
   const instagram = fields.customer_instagram || '';
   const email = fields.customer_email || '';
   const method = fields.delivery_method || '';
+  const location = fields.delivery_location || '';
   const notes = fields.delivery_notes || '';
+  const deliveryFee = fields.delivery_fee || '0';
+  const addonsTotal = fields.addons_total || '0';
+  const addonChocolate = fields.addon_chocolate || 'No';
+  const addonGiftwrap = fields.addon_giftwrap || 'No';
   const orderSummary = fields.order_summary || '';
   const orderTotal = fields.order_total || '';
+  const orderFinal = fields.order_total_final || '';
   const itemCount = fields.item_count || '';
-  const itemDetails = buildItemLines(fields);
+  const itemDetails = (typeof buildItemLines === 'function' ? buildItemLines(fields) : buildItemLinesClean(fields));
 
   return [
     'New order received.\n',
@@ -59,13 +83,17 @@ function buildBody(fields) {
     '',
     'Delivery',
     `- Method: ${method}`,
+    `- Location: ${location}`,
     `- Notes: ${notes}`,
     '',
     'Quick Summary',
     orderSummary,
     '',
     'Totals',
-    `- Order total: ${orderTotal}`,
+    `- Base total: ${orderTotal} JD`,
+    `- Delivery fee: ${deliveryFee} JD`,
+    `- Add-ons total: ${addonsTotal} JD (Chocolate: ${addonChocolate}, Gift wrap: ${addonGiftwrap})`,
+    `- Final total: ${orderFinal || (Number(orderTotal||0)+Number(deliveryFee||0)+Number(addonsTotal||0))} JD`,
     `- Item count: ${itemCount}`,
     '',
     'Item Details',
@@ -91,6 +119,13 @@ function getTransport() {
   return nodemailer.createTransport({ host, port, secure, auth: { user, pass } });
 }
 
+// Fallback clean subject builder to avoid mojibake
+function buildSubjectClean(fields) {
+  const name = fields.customer_name || 'Customer';
+  const itemCount = fields.item_count || '0';
+  return `New order - ${name} - Items: ${itemCount}`;
+}
+
 app.post('/api/order', upload.any(), async (req, res) => {
   try {
     // Convert fields to plain object of strings
@@ -107,7 +142,7 @@ app.post('/api/order', upload.any(), async (req, res) => {
       contentType: f.mimetype
     }));
 
-    const subject = buildSubject(fields);
+    const subject = (typeof buildSubjectClean === 'function' ? buildSubjectClean(fields) : buildSubject(fields));
     const text = buildBody(fields);
 
     const transporter = getTransport();
