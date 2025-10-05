@@ -1,0 +1,11 @@
+﻿# Local env and temp files
+.env
+__oldcalc.txt
+__targetline.txt
+_blk.txt
+temp_snippet.txt
+tmp_line.txt
+index.html.mojibake_backup
+
+# Node
+node_modules/
