@@ -474,19 +474,6 @@
               <button type="button" class="btn btn-primary" id="add-to-cart">إضافة إلى السلة</button>
               <p class="form-hint">يمكنك إضافة أكثر من منتج قبل الإرسال.</p>
             </div>
-            <section class="summary-card" id="price-summary" dir="rtl" aria-labelledby="sum-title">
-              <header class="summary-head">
-                <div>
-                  <h3 id="sum-title">الإجمالي</h3>
-                  <p class="summary-note">تفاصيل الفاتورة موضّحة بالأسفل.</p>
-                </div>
-                <div class="summary-total" id="summary-total">0 د.أ</div>
-              </header>
-              <div class="summary-section">
-                <h4 class="summary-subtitle">تفاصيل الفاتورة</h4>
-                <ul class="summary-list" id="summary-lines"></ul>
-              </div>
-            </section>
           </form>
         </div>
 
@@ -507,6 +494,10 @@
               <strong id="cart-total">0 د.أ</strong>
             </div>
             <p class="total-hint">قد يتغير السعر النهائي بعد مراجعة الفنانة للتفاصيل.</p>
+          </div>
+          <div class="invoice">
+            <h4 class="summary-subtitle">تفاصيل الفاتورة</h4>
+            <ul class="summary-list" id="summary-lines"></ul>
           </div>
           <div class="field-group field-group--addons" data-field-label="إضافات">
             <label class="field-label">إضافات اختيارية</label>
@@ -648,7 +639,7 @@
       function formatJD(n) { try { return Number(n||0).toLocaleString('ar-JO') + ' د.أ'; } catch(_) { return String(n) + ' د.أ'; } }
       function updatePriceSummary() {
         const list = document.getElementById('summary-lines');
-        const totalEl = document.getElementById('summary-total');
+        const totalEl = document.getElementById('summary-total') || document.getElementById('cart-total');
         if (!list || !totalEl) return;
 
         // base from cart

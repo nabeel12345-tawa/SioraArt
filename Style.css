@@ -1396,19 +1396,21 @@ textarea {
 
 .checkout-summary .cart-total span {
   color: var(--charcoal);
-  font-weight: 700;
-  letter-spacing: .02em;
+  font-weight: 800;
+  letter-spacing: .01em;
+  font-size: 1.05rem;
 }
 
 .checkout-summary .cart-total strong {
-  font-size: 1.4rem;
+  font-size: 1.45rem;
   color: var(--charcoal);
-  font-weight: 800;
+  font-weight: 900;
   font-variant-numeric: tabular-nums;
   -webkit-font-feature-settings: 'tnum';
           font-feature-settings: 'tnum';
-  direction: ltr;
-  unicode-bidi: bidi-override;
+  direction: rtl;
+  unicode-bidi: isolate;
+  padding-inline: 8px 0;
 }
 
 .checkout-summary .total-hint {
@@ -1425,10 +1427,11 @@ textarea {
 .cart-total {
   display: flex;
   justify-content: space-between;
-  align-items: baseline; /* better optical alignment */
+  align-items: baseline;
   font-size: 1rem;
   border-bottom: 1px solid rgba(44,42,40,0.08);
-  padding-bottom: 6px;
+  padding-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .cart-eta {
@@ -1940,7 +1943,7 @@ textarea {
 .summary-head h3{margin:0 0 4px;color:var(--charcoal)}
 .summary-note{margin:0;color:var(--text-muted);font-size:.9rem}
 .summary-total{font-weight:800;font-size:1.35rem;color:var(--charcoal);padding:8px 12px;border:1px dashed rgba(180,138,84,.45);border-radius:12px;background:linear-gradient(180deg, rgba(180,138,84,.08), transparent)}
-.summary-subtitle{margin:8px 0 6px;font-size:1rem;color:var(--charcoal)}
+.summary-subtitle{ margin:10px 0 8px; font-size:1.05rem; font-weight:800; color:#2b2926; }
 .summary-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .summary-list .line{display:flex;justify-content:space-between;align-items:center;padding:10px 10px;background:#fff;border:1px solid rgba(43,41,38,.10);border-radius:12px}
 .summary-list .label{color:var(--charcoal);font-weight:600}
@@ -1949,13 +1952,15 @@ textarea {
 /* Stack the invoice list in current choices */
 .checkout-summary{ display:block; padding:0; border:none; background:transparent; }
 .checkout-summary .cart-summary{ margin:0 0 10px; }
-.invoice{ margin:6px 0 12px; }
+.invoice{ margin:10px 0 12px; }
 
 /* Summary list row alignment */
 .summary-list{ list-style:none; margin:0; padding:0; display:grid; gap:6px; }
 .summary-list .line{ display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:#fff; border:1px solid rgba(43,41,38,.10); border-radius:12px; }
 .summary-list .label{ color:#2b2926; font-weight:600; }
-.summary-list .price{ color:#2b2926; font-weight:800; min-width:9ch; text-align:left; font-variant-numeric: tabular-nums; -webkit-font-feature-settings:'tnum'; font-feature-settings:'tnum'; direction:ltr; unicode-bidi:bidi-override; }
+.summary-list .price{ color:#2b2926; font-weight:800; min-width:9ch; text-align:left; font-variant-numeric: tabular-nums; -webkit-font-feature-settings:'tnum'; font-feature-settings:'tnum'; direction: rtl; unicode-bidi:isolate; }
+/* keep single definition (removed duplicate) */
 .summary-subtitle{ margin:10px 0 8px; font-size:1.05rem; font-weight:800; color:#2b2926; }
 .summary-note{ font-size:.9rem; color:var(--text-muted); }
-.summary-subtitle{ margin:8px 0 6px; font-size:1rem; color:#2b2926; }
+ .summary-list .line:hover{ border-color: rgba(180,138,84,.55); box-shadow: 0 8px 16px rgba(180,138,84,.12); transform: translateY(-2px); }
+
