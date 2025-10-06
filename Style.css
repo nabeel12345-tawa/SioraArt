@@ -1507,6 +1507,66 @@ textarea {
   margin-inline-end: 6px; /* RTL/LTR friendly spacing */
 }
 
+/* "وسائل التواصل" block interactive accents */
+.contact-grid > div:first-child h3 {
+  position: relative;
+  display: inline-block;
+  transition: color var(--transition), transform var(--transition);
+}
+.contact-grid > div:first-child h3::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--gold) 50%, transparent 100%);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  transition: width .35s ease, box-shadow .35s ease;
+}
+.contact-grid > div:first-child h3:hover {
+  color: var(--gold);
+  transform: translateY(-2px);
+}
+.contact-grid > div:first-child h3:hover::after {
+  width: 100%;
+  box-shadow: 0 0 18px rgba(180,138,84,.45);
+}
+
+/* Links hover glow + underline sweep */
+.contact-list a {
+  position: relative;
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 10px;
+  color: var(--charcoal);
+  transition: color .25s ease, background .25s ease, box-shadow .25s ease, transform .25s ease;
+}
+.contact-list a::after {
+  content: '';
+  position: absolute;
+  inset-inline: 8px;
+  bottom: 2px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform .35s ease;
+}
+.contact-list a:hover,
+.contact-list a:focus {
+  color: var(--gold);
+  background: transparent; /* remove background glow */
+  box-shadow: none;        /* remove shadow glow */
+  transform: none;         /* keep position; only underline + color */
+}
+.contact-list a:hover::after,
+.contact-list a:focus::after {
+  transform: scaleX(1);
+}
+
 /* Force LTR display for WhatsApp numbers regardless of page RTL */
 .contact-list a[href*="wa.me"],
 .contact-list .ltr-number {
@@ -1865,3 +1925,15 @@ textarea {
 
 
 
+/* Price summary card (total on top + invoice list) */
+.summary-card{max-width:760px;margin:16px auto;padding:16px;background:rgba(255,255,255,.96);border:1px solid var(--border-color);border-radius:16px;box-shadow:0 18px 36px rgba(32,27,22,.08)}
+.summary-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:10px}
+.summary-head h3{margin:0 0 4px;color:var(--charcoal)}
+.summary-note{margin:0;color:var(--text-muted);font-size:.9rem}
+.summary-total{font-weight:800;font-size:1.35rem;color:var(--charcoal);padding:8px 12px;border:1px dashed rgba(180,138,84,.45);border-radius:12px;background:linear-gradient(180deg, rgba(180,138,84,.08), transparent)}
+.summary-subtitle{margin:8px 0 6px;font-size:1rem;color:var(--charcoal)}
+.summary-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.summary-list .line{display:flex;justify-content:space-between;align-items:center;padding:10px 10px;background:#fff;border:1px solid rgba(43,41,38,.10);border-radius:12px}
+.summary-list .label{color:var(--charcoal);font-weight:600}
+.summary-list .price{color:var(--charcoal);font-weight:700;min-width:96px;text-align:left}
+.summary-list .sep{height:1px;margin:6px 0;background:linear-gradient(90deg,transparent,rgba(43,41,38,.18),transparent)}

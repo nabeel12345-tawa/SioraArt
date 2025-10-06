@@ -474,6 +474,19 @@
               <button type="button" class="btn btn-primary" id="add-to-cart">إضافة إلى السلة</button>
               <p class="form-hint">يمكنك إضافة أكثر من منتج قبل الإرسال.</p>
             </div>
+            <section class="summary-card" id="price-summary" dir="rtl" aria-labelledby="sum-title">
+              <header class="summary-head">
+                <div>
+                  <h3 id="sum-title">الإجمالي</h3>
+                  <p class="summary-note">تفاصيل الفاتورة موضّحة بالأسفل.</p>
+                </div>
+                <div class="summary-total" id="summary-total">0 د.أ</div>
+              </header>
+              <div class="summary-section">
+                <h4 class="summary-subtitle">تفاصيل الفاتورة</h4>
+                <ul class="summary-list" id="summary-lines"></ul>
+              </div>
+            </section>
           </form>
         </div>
 
@@ -631,6 +644,45 @@
         })
         .filter(Boolean);
 
+      // -------- Price Summary (total + invoice list) --------
+      function formatJD(n) { try { return Number(n||0).toLocaleString('ar-JO') + ' د.أ'; } catch(_) { return String(n) + ' د.أ'; } }
+      function updatePriceSummary() {
+        const list = document.getElementById('summary-lines');
+        const totalEl = document.getElementById('summary-total');
+        if (!list || !totalEl) return;
+
+        // base from cart
+        const base = cart.reduce((sum, i) => sum + (i.price || 0), 0);
+
+        // add-ons (prefer top controls)
+        const chTop = document.getElementById('addon-chocolate-top');
+        const gwTop = document.getElementById('addon-giftwrap-top');
+        const ch = chTop || document.getElementById('addon-chocolate');
+        const gw = gwTop || document.getElementById('addon-giftwrap');
+        const addons = (ch && ch.checked ? 1 : 0) + (gw && gw.checked ? 1 : 0);
+
+        // delivery
+        const isDelivery = !!(document.getElementById('delivery-location-group') && !document.getElementById('delivery-location-group').hidden);
+        const deliveryFee = isDelivery ? 2 : 0;
+
+        // build lines
+        let html = '';
+        if (cart.length) {
+          cart.forEach(i => {
+            html += `<li class="line"><span class="label">${i.productName}</span><span class="price">${formatJD(i.price||0)}</span></li>`;
+          });
+          html += `<li class="sep" aria-hidden="true"></li>`;
+        } else {
+          html += `<li class="line"><span class="label">لا توجد منتجات</span><span class="price">${formatJD(0)}</span></li>`;
+        }
+        if (ch && ch.checked) html += `<li class="line"><span class="label">إضافة شوكولاتة</span><span class="price">+${formatJD(1)}</span></li>`;
+        if (gw && gw.checked) html += `<li class="line"><span class="label">تغليف هدية</span><span class="price">+${formatJD(1)}</span></li>`;
+        if (deliveryFee) html += `<li class="line"><span class="label">التوصيل</span><span class="price">+${formatJD(deliveryFee)}</span></li>`;
+
+        list.innerHTML = html;
+        totalEl.textContent = formatJD(base + addons + deliveryFee);
+      }
+
       // Toggle delivery location input based on delivery method
       const deliveryMethodSelect = document.getElementById('delivery-method');
       // Default to pickup on first load; user can switch to delivery
@@ -706,9 +758,9 @@
         document.getElementById('addon-giftwrap-top'),
         document.getElementById('addon-chocolate'),
         document.getElementById('addon-giftwrap')
-      ].forEach(el => { if (el) el.addEventListener('change', () => calculateTotal()); });
+      ].forEach(el => { if (el) el.addEventListener('change', () => { calculateTotal(); updatePriceSummary(); }); });
       if (deliveryMethodSelect) {
-        deliveryMethodSelect.addEventListener('change', () => calculateTotal());
+        deliveryMethodSelect.addEventListener('change', () => { calculateTotal(); updatePriceSummary(); });
       }
 
       // If top-positioned add-ons exist, hide the original group in the form
@@ -1306,6 +1358,7 @@
         });
 
         calculateTotal();
+        if (typeof updatePriceSummary === 'function') { updatePriceSummary(); }
       }
 
       document.getElementById('add-to-cart').addEventListener('click', () => {
@@ -1535,6 +1588,7 @@
   </script>
 </body>
 </html>
+
 
 
 
